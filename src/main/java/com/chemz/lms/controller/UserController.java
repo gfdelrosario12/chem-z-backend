@@ -16,40 +16,16 @@ public class UserController {
         this.userService = userService;
     }
 
-    // --- Create based on role ---
-    @PostMapping("/admin")
-    public ResponseEntity<User> createAdmin(@RequestBody Admin admin) {
-        return ResponseEntity.ok(userService.createUser(admin));
+    @PostMapping("/register")
+    public ResponseEntity<User> register(@RequestBody User user) {
+        return ResponseEntity.ok(userService.createUser(user));
     }
 
-    @PostMapping("/teacher")
-    public ResponseEntity<User> createTeacher(@RequestBody Teacher teacher) {
-        return ResponseEntity.ok(userService.createUser(teacher));
-    }
-
-    @PostMapping("/student")
-    public ResponseEntity<User> createStudent(@RequestBody Student student) {
-        return ResponseEntity.ok(userService.createUser(student));
-    }
-
-    // --- Get all ---
-    @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
-    }
-
-    // --- Get single ---
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        return userService.getUserById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    // --- Delete ---
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestParam String username, @RequestParam String password) {
+        if (userService.validateLogin(username, password)) {
+            return ResponseEntity.ok("Login successful ✅");
+        }
+        return ResponseEntity.status(401).body("Invalid credentials ❌");
     }
 }
