@@ -50,4 +50,10 @@ public class Course {
 
     public Set<Enrollment> getEnrollments() { return enrollments; }
     public void setEnrollments(Set<Enrollment> enrollments) { this.enrollments = enrollments; }
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Activity> activities = new HashSet<>();
+
+    public Set<Activity> getActivities() { return activities; }
+    public void setActivities(Set<Activity> activities) { this.activities = activities; }
 }
