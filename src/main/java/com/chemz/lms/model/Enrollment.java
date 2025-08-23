@@ -31,6 +31,12 @@ public class Enrollment {
         this.grade = grade;
     }
 
+    public Enrollment(Student student, Course course) {
+        this.student = student;
+        this.course = course;
+        this.grade = null; // or 0.0 if you prefer
+    }
+
     // --- Getters & Setters ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

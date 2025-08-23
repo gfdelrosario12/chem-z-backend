@@ -23,14 +23,30 @@ public abstract class User {
     @Column(nullable = false)
     private String role; // ADMIN, TEACHER, STUDENT
 
+    @Column(nullable = false)
+    private String firstName;
+
+    @Column
+    private String middleName;
+
+    @Column(nullable = false)
+    private String lastName;
+
     // --- Constructors ---
     public User() {}
 
-    public User(String username, String password, String email, String role) {
+    public User(String username, String password, String email, String role,
+                String firstName, String middleName, String lastName) {
         this.username = username;
         this.password = password;
         this.email = email;
         this.role = role;
+        this.firstName = firstName;
+        this.middleName = middleName;
+        this.lastName = lastName;
+    }
+
+    public User(String username, String password, String email, String student) {
     }
 
     // --- Getters & Setters ---
@@ -48,4 +64,13 @@ public abstract class User {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+
+    public String getMiddleName() { return middleName; }
+    public void setMiddleName(String middleName) { this.middleName = middleName; }
+
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
 }
