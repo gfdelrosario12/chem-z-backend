@@ -1,5 +1,6 @@
 package com.chemz.lms.controller;
 
+import com.chemz.lms.dto.UserLoginDto;
 import com.chemz.lms.model.*;
 import com.chemz.lms.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,12 +24,10 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestParam String username,
-                                        @RequestParam String password,
+    public ResponseEntity<String> login(@RequestBody UserLoginDto loginRequest,
                                         HttpServletRequest request) {
         String ipAddress = request.getRemoteAddr();
-
-        if (userService.validateLogin(username, password, ipAddress)) {
+        if (userService.validateLogin(loginRequest.getUsername(), loginRequest.getPassword(), ipAddress)) {
             return ResponseEntity.ok("Login successful ✅");
         }
         return ResponseEntity.status(401).body("Invalid credentials ❌");
