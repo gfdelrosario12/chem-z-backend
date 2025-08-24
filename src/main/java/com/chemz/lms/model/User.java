@@ -1,9 +1,22 @@
 package com.chemz.lms.model;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.persistence.*;
 
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.EXISTING_PROPERTY,
+        property = "role",
+        visible = true
+)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = Admin.class, name = "ADMIN"),
+        @JsonSubTypes.Type(value = Teacher.class, name = "TEACHER"),
+        @JsonSubTypes.Type(value = Student.class, name = "STUDENT")
+})
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)  // creates separate tables
+@Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "users")
 public abstract class User {
 
