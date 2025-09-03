@@ -30,8 +30,37 @@ public class UserService {
 
     // --- CREATE ---
     public User createUser(User user) {
+        // Check email uniqueness
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new IllegalArgumentException("Email already exists: " + user.getEmail());
+        }
+
+        // Encode password
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        // Generate username based on role + last id
+        Long lastId = userRepository.findTopByOrderByIdDesc()
+                .map(User::getId)
+                .orElse(0L);
+
+        String generatedUsername = generateUsername(user.getRole(), lastId + 1);
+        user.setUsername(generatedUsername);
+
         return userRepository.save(user);
+    }
+
+    // --- HELPER ---
+    private String generateUsername(String role, Long id) {
+        String roleCode;
+        switch (role.toUpperCase()) {
+            case "ADMIN": roleCode = "AD"; break;
+            case "TEACHER": roleCode = "TC"; break;
+            case "STUDENT": roleCode = "ST"; break;
+            default: roleCode = "XX"; // fallback
+        }
+
+        // Format: CZ - AD/TC/ST - 01
+        return String.format("CZ - %s - %02d", roleCode, id);
     }
 
     // --- READ ---
