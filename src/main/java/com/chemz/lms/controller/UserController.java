@@ -13,6 +13,11 @@ import java.util.List;
 @RequestMapping("/api/users")
 public class UserController {
 
+    @GetMapping
+    public ResponseEntity<List<User>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
+
     private final UserService userService;
     public UserController(UserService userService) {
         this.userService = userService;
