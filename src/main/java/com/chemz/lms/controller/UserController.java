@@ -36,9 +36,9 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserLoginDto loginRequest,
-                                        HttpServletRequest request,
-                                        HttpServletResponse response) {
+    public ResponseEntity<?> login(@RequestBody UserLoginDto loginRequest,
+                                   HttpServletRequest request,
+                                   HttpServletResponse response) {
         String ipAddress = request.getRemoteAddr();
 
         if (userService.validateLogin(loginRequest.getUsername(), loginRequest.getPassword(), ipAddress)) {
@@ -53,8 +53,11 @@ public class UserController {
             cookie.setMaxAge((int) (jwtUtil.getExpirationTime() / 1000));
             response.addCookie(cookie);
 
-            return ResponseEntity.ok("Login successful ✅");
+            // ✅ Fetch user details and return UserDto
+            User user = userService.getUserByUsername(loginRequest.getUsername());
+            return ResponseEntity.ok(new UserDto(user));
         }
+
         return ResponseEntity.status(401).body("Invalid credentials ❌");
     }
 
@@ -65,7 +68,7 @@ public class UserController {
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
         cookie.setPath("/");
-        cookie.setMaxAge(0); // expire immediately
+        cookie.setMaxAge(0);
         response.addCookie(cookie);
 
         return ResponseEntity.ok("Logged out successfully 🚪");
