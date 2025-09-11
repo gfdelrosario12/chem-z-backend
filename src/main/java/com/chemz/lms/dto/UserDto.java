@@ -13,7 +13,7 @@ public class UserDto {
         this.id = user.getId();
         this.username = user.getUsername();
         this.email = user.getEmail();
-        this.role = user.getRole();
+        this.role = user.getRole().toLowerCase(); // ✅ normalize
     }
 
     // Getters
