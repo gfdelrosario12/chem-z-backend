@@ -23,4 +23,8 @@ public class ActivityService {
     public List<Activity> getActivitiesByCourse(Long courseId) {
         return activityRepository.findByCourseId(courseId);
     }
+
+    public long countActivities() {
+        return activityRepository.count();
+    }
 }
