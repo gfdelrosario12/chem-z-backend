@@ -73,4 +73,8 @@ public class CourseService {
     public List<Enrollment> getStudentsInCourse(Long courseId) {
         return enrollmentRepository.findByCourseId(courseId);
     }
+
+    public long countCourses() {
+        return courseRepository.count();
+    }
 }

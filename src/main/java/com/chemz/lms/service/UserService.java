@@ -1,11 +1,9 @@
 package com.chemz.lms.service;
 
 import com.chemz.lms.model.Admin;
-import com.chemz.lms.model.LoginLog;
 import com.chemz.lms.model.Student;
 import com.chemz.lms.model.Teacher;
 import com.chemz.lms.model.User;
-import com.chemz.lms.repository.LoginLogRepository;
 import com.chemz.lms.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,14 +16,11 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final LoginLogRepository loginLogRepository;
 
     public UserService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder,
-                       LoginLogRepository loginLogRepository) {
+                       PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.loginLogRepository = loginLogRepository;
     }
 
     // --- CREATE ---
@@ -102,17 +97,26 @@ public class UserService {
     }
 
     // --- LOGIN VALIDATION ---
-    public boolean validateLogin(String username, String rawPassword, String ipAddress) {
+// --- LOGIN VALIDATION ---
+    public boolean validateLogin(String username, String rawPassword) {
         Optional<User> userOpt = userRepository.findByUsername(username);
-        boolean success = userOpt.isPresent() && passwordEncoder.matches(rawPassword, userOpt.get().getPassword());
-
-        loginLogRepository.save(new LoginLog(username, success, ipAddress));
-
-        return success;
+        return userOpt.isPresent() && passwordEncoder.matches(rawPassword, userOpt.get().getPassword());
     }
 
     public User getUserByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+    }
+
+    public long countUsers() {
+        return userRepository.count();
+    }
+
+    public long countAdmins() {
+        return userRepository.countByRole("ADMIN");
+    }
+
+    public long countStudents() {
+        return userRepository.countByRole("STUDENT");
     }
 }

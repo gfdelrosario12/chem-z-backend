@@ -52,4 +52,8 @@ public class TeacherService {
     public Optional<Teacher> getTeacherByEmail(String email) {
         return teacherRepository.findByEmail(email);
     }
+
+    public long countTeachers() {
+        return teacherRepository.count();
+    }
 }

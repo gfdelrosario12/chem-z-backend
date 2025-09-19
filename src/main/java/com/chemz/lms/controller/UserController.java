@@ -25,35 +25,35 @@ public class UserController {
         this.jwtUtil = jwtUtil;
     }
 
+    // ✅ Get all users
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
+    // ✅ Register
     @PostMapping("/register")
     public ResponseEntity<User> register(@RequestBody User user) {
         return ResponseEntity.ok(userService.createUser(user));
     }
 
+    // ✅ Login
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserLoginDto loginRequest,
                                    HttpServletRequest request,
                                    HttpServletResponse response) {
         String ipAddress = request.getRemoteAddr();
 
-        if (userService.validateLogin(loginRequest.getUsername(), loginRequest.getPassword(), ipAddress)) {
-            // ✅ Generate JWT
+        if (userService.validateLogin(loginRequest.getUsername(), loginRequest.getPassword())) {
             String token = jwtUtil.generateToken(loginRequest.getUsername());
 
-            // ✅ Send as HttpOnly cookie
             Cookie cookie = new Cookie("jwt", token);
             cookie.setHttpOnly(true);
-            cookie.setSecure(false); // set to true in production (HTTPS)
+            cookie.setSecure(false); // ⚠️ true in production (HTTPS)
             cookie.setPath("/");
             cookie.setMaxAge((int) (jwtUtil.getExpirationTime() / 1000));
             response.addCookie(cookie);
 
-            // ✅ Fetch user details and return UserDto
             User user = userService.getUserByUsername(loginRequest.getUsername());
             return ResponseEntity.ok(new UserDto(user));
         }
@@ -61,9 +61,9 @@ public class UserController {
         return ResponseEntity.status(401).body("Invalid credentials ❌");
     }
 
+    // ✅ Logout
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletResponse response) {
-        // ✅ Clear cookie
         Cookie cookie = new Cookie("jwt", null);
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
@@ -74,6 +74,7 @@ public class UserController {
         return ResponseEntity.ok("Logged out successfully 🚪");
     }
 
+    // ✅ Get current user
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@CookieValue(name = "jwt", required = false) String token) {
         if (token == null || !jwtUtil.isTokenValid(token)) {
@@ -83,8 +84,19 @@ public class UserController {
         String username = jwtUtil.extractUsername(token);
         User user = userService.getUserByUsername(username);
 
-        // ✅ Return only safe fields
         return ResponseEntity.ok(new UserDto(user));
     }
 
+    // ✅ Update user
+    @PutMapping("/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
+        return ResponseEntity.ok(userService.updateUser(id, updatedUser));
+    }
+
+    // ✅ Delete user
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok("User deleted successfully 🗑️");
+    }
 }

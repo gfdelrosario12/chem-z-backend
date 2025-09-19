@@ -1,13 +1,13 @@
 package com.chemz.lms.controller;
 
 import com.chemz.lms.model.*;
-import com.chemz.lms.service.UserService;
-import com.chemz.lms.service.CourseService;
-import com.chemz.lms.service.TeacherService;
+import com.chemz.lms.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -16,13 +16,31 @@ public class AdminController {
     private final UserService userService;
     private final TeacherService teacherService;
     private final CourseService courseService;
+    private final ActivityService activityService;
 
     public AdminController(UserService userService,
                            TeacherService teacherService,
-                           CourseService courseService) {
+                           CourseService courseService,
+                           ActivityService activityService) {
         this.userService = userService;
         this.teacherService = teacherService;
         this.courseService = courseService;
+        this.activityService = activityService;
+    }
+
+    // ===== DASHBOARD STATS =====
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Long>> getDashboardStats() {
+        Map<String, Long> stats = new HashMap<>();
+
+        stats.put("users", userService.countUsers());             // total users (students + admins + teachers)
+        stats.put("teachers", teacherService.countTeachers());    // total teachers
+        stats.put("admins", userService.countAdmins());           // total admins (assuming role-based in UserService)
+        stats.put("students", userService.countStudents());       // total students
+        stats.put("courses", courseService.countCourses());       // total courses
+        stats.put("activities", activityService.countActivities()); // total activities (quizzes + activities)
+
+        return ResponseEntity.ok(stats);
     }
 
     // ===== USER CRUD =====
