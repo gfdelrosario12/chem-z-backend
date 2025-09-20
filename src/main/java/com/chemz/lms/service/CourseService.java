@@ -70,9 +70,13 @@ public class CourseService {
     }
 
     // --- Get students in a course ---
-    public List<Enrollment> getStudentsInCourse(Long courseId) {
-        return enrollmentRepository.findByCourseId(courseId);
+    public List<Student> getStudentsInCourse(Long courseId) {
+        return enrollmentRepository.findByCourseId(courseId)
+                .stream()
+                .map(Enrollment::getStudent)
+                .toList();
     }
+
 
     public long countCourses() {
         return courseRepository.count();

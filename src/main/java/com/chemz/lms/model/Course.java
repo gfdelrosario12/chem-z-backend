@@ -1,5 +1,6 @@
 package com.chemz.lms.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,6 +22,7 @@ public class Course {
     // Many Courses -> One Teacher
     @ManyToOne
     @JoinColumn(name = "teacher_id", nullable = false)
+    @JsonBackReference
     private Teacher teacher;
 
     // One Course -> Many Enrollments (students enrolled in this course)

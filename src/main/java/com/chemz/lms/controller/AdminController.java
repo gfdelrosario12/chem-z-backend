@@ -1,6 +1,9 @@
 package com.chemz.lms.controller;
 
-import com.chemz.lms.model.*;
+import com.chemz.lms.dto.UserDto;
+import com.chemz.lms.model.Course;
+import com.chemz.lms.model.Teacher;
+import com.chemz.lms.model.User;
 import com.chemz.lms.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,36 +36,36 @@ public class AdminController {
     public ResponseEntity<Map<String, Long>> getDashboardStats() {
         Map<String, Long> stats = new HashMap<>();
 
-        stats.put("users", userService.countUsers());             // total users (students + admins + teachers)
-        stats.put("teachers", teacherService.countTeachers());    // total teachers
-        stats.put("admins", userService.countAdmins());           // total admins (assuming role-based in UserService)
-        stats.put("students", userService.countStudents());       // total students
-        stats.put("courses", courseService.countCourses());       // total courses
-        stats.put("activities", activityService.countActivities()); // total activities (quizzes + activities)
+        stats.put("users", userService.countUsers());
+        stats.put("teachers", teacherService.countTeachers());
+        stats.put("admins", userService.countAdmins());
+        stats.put("students", userService.countStudents());
+        stats.put("courses", courseService.countCourses());
+        stats.put("activities", activityService.countActivities());
 
         return ResponseEntity.ok(stats);
     }
 
     // ===== USER CRUD =====
     @GetMapping("/users")
-    public List<User> getAllUsers() {
+    public List<UserDto> getAllUsers() {
         return userService.getAllUsers();
     }
 
     @GetMapping("/users/{id}")
-    public ResponseEntity<User> getUser(@PathVariable Long id) {
+    public ResponseEntity<UserDto> getUser(@PathVariable Long id) {
         return userService.getUserById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/users")
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    public ResponseEntity<UserDto> createUser(@RequestBody User user) {
         return ResponseEntity.ok(userService.createUser(user));
     }
 
     @PutMapping("/users/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody User user) {
         try {
             return ResponseEntity.ok(userService.updateUser(id, user));
         } catch (RuntimeException e) {

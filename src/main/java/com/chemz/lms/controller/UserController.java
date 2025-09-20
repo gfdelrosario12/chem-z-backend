@@ -2,8 +2,8 @@ package com.chemz.lms.controller;
 
 import com.chemz.lms.dto.UserDto;
 import com.chemz.lms.dto.UserLoginDto;
-import com.chemz.lms.model.User;
 import com.chemz.lms.config.JwtUtil;
+import com.chemz.lms.model.User;
 import com.chemz.lms.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,13 +27,13 @@ public class UserController {
 
     // ✅ Get all users
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<UserDto>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     // ✅ Register
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody User user) {
+    public ResponseEntity<UserDto> register(@RequestBody User user) {
         return ResponseEntity.ok(userService.createUser(user));
     }
 
@@ -54,8 +54,8 @@ public class UserController {
             cookie.setMaxAge((int) (jwtUtil.getExpirationTime() / 1000));
             response.addCookie(cookie);
 
-            User user = userService.getUserByUsername(loginRequest.getUsername());
-            return ResponseEntity.ok(new UserDto(user));
+            UserDto userDto = userService.getUserByUsername(loginRequest.getUsername());
+            return ResponseEntity.ok(userDto);
         }
 
         return ResponseEntity.status(401).body("Invalid credentials ❌");
@@ -82,14 +82,14 @@ public class UserController {
         }
 
         String username = jwtUtil.extractUsername(token);
-        User user = userService.getUserByUsername(username);
+        UserDto userDto = userService.getUserByUsername(username);
 
-        return ResponseEntity.ok(new UserDto(user));
+        return ResponseEntity.ok(userDto);
     }
 
     // ✅ Update user
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
         return ResponseEntity.ok(userService.updateUser(id, updatedUser));
     }
 
