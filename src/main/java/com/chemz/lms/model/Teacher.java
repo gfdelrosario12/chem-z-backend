@@ -1,5 +1,6 @@
 package com.chemz.lms.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -12,6 +13,7 @@ public class Teacher extends User {
 
     // One Teacher -> Many Courses
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<Course> courses = new HashSet<>();
 
     public Teacher() {}

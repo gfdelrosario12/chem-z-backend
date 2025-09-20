@@ -1,15 +1,14 @@
 package com.chemz.lms.service;
 
-import com.chemz.lms.model.Admin;
-import com.chemz.lms.model.Student;
-import com.chemz.lms.model.Teacher;
-import com.chemz.lms.model.User;
+import com.chemz.lms.dto.UserDto;
+import com.chemz.lms.model.*;
 import com.chemz.lms.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -24,16 +23,13 @@ public class UserService {
     }
 
     // --- CREATE ---
-    public User createUser(User user) {
-        // Check email uniqueness
+    public UserDto createUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email already exists: " + user.getEmail());
         }
 
-        // Encode password
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        // Generate username based on role + last id
         Long lastId = userRepository.findTopByOrderByIdDesc()
                 .map(User::getId)
                 .orElse(0L);
@@ -41,7 +37,8 @@ public class UserService {
         String generatedUsername = generateUsername(user.getRole(), lastId + 1);
         user.setUsername(generatedUsername);
 
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+        return convertToDTO(saved);
     }
 
     // --- HELPER ---
@@ -51,33 +48,53 @@ public class UserService {
             case "ADMIN": roleCode = "AD"; break;
             case "TEACHER": roleCode = "TC"; break;
             case "STUDENT": roleCode = "ST"; break;
-            default: roleCode = "XX"; // fallback
+            default: roleCode = "XX";
         }
-
-        // Format: CZ - AD/TC/ST - 01
         return String.format("CZ - %s - %02d", roleCode, id);
     }
 
-    // --- READ ---
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    private UserDto convertToDTO(User user) {
+        UserDto dto = new UserDto();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setRole(user.getRole());
+        dto.setFirstName(user.getFirstName());
+        dto.setMiddleName(user.getMiddleName());
+        dto.setLastName(user.getLastName());
+
+        if (user instanceof Admin admin) {
+            dto.setDepartment(admin.getDepartment());
+        } else if (user instanceof Teacher teacher) {
+            dto.setSubject(teacher.getSubject());
+        } else if (user instanceof Student student) {
+            dto.setGradeLevel(student.getGradeLevel());
+        }
+
+        return dto;
     }
 
-    public Optional<User> getUserById(Long id) {
-        return userRepository.findById(id);
+    // --- READ ---
+    public List<UserDto> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public Optional<UserDto> getUserById(Long id) {
+        return userRepository.findById(id).map(this::convertToDTO);
     }
 
     // --- UPDATE ---
-    public User updateUser(Long id, User updatedUser) {
+    public UserDto updateUser(Long id, User updatedUser) {
         return userRepository.findById(id)
                 .map(existingUser -> {
-                    existingUser.setUsername(updatedUser.getUsername());
                     existingUser.setEmail(updatedUser.getEmail());
                     if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
                         existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
                     }
 
-                    // Subclass-specific updates
                     if (existingUser instanceof Admin admin && updatedUser instanceof Admin updatedAdmin) {
                         admin.setDepartment(updatedAdmin.getDepartment());
                     } else if (existingUser instanceof Teacher teacher && updatedUser instanceof Teacher updatedTeacher) {
@@ -86,7 +103,7 @@ public class UserService {
                         student.setGradeLevel(updatedStudent.getGradeLevel());
                     }
 
-                    return userRepository.save(existingUser);
+                    return convertToDTO(userRepository.save(existingUser));
                 })
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
@@ -96,27 +113,20 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    // --- LOGIN VALIDATION ---
-// --- LOGIN VALIDATION ---
+    // --- LOGIN ---
     public boolean validateLogin(String username, String rawPassword) {
         Optional<User> userOpt = userRepository.findByUsername(username);
         return userOpt.isPresent() && passwordEncoder.matches(rawPassword, userOpt.get().getPassword());
     }
 
-    public User getUserByUsername(String username) {
+    public UserDto getUserByUsername(String username) {
         return userRepository.findByUsername(username)
+                .map(this::convertToDTO)
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
     }
 
-    public long countUsers() {
-        return userRepository.count();
-    }
-
-    public long countAdmins() {
-        return userRepository.countByRole("ADMIN");
-    }
-
-    public long countStudents() {
-        return userRepository.countByRole("STUDENT");
-    }
+    // --- COUNTS ---
+    public long countUsers() { return userRepository.count(); }
+    public long countAdmins() { return userRepository.countByRole("ADMIN"); }
+    public long countStudents() { return userRepository.countByRole("STUDENT"); }
 }
