@@ -17,12 +17,15 @@ public class Activity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column
+    @Column(nullable = true)
     private String fileUrl;  // URL or path to uploaded file
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ActivityType type; // QUIZ or ACTIVITY
+
+    @Column(nullable = true)
+    private Integer quizNumber; // optional, only for QUIZ activities
 
     // Many Activities -> One Course
     @ManyToOne
@@ -31,12 +34,24 @@ public class Activity {
 
     public Activity() {}
 
+    // Constructor without quizNumber (optional)
     public Activity(String title, String description, String fileUrl, ActivityType type, Course course) {
         this.title = title;
         this.description = description;
         this.fileUrl = fileUrl;
         this.type = type;
         this.course = course;
+        this.quizNumber = null;
+    }
+
+    // Constructor with quizNumber
+    public Activity(String title, String description, String fileUrl, ActivityType type, Course course, Integer quizNumber) {
+        this.title = title;
+        this.description = description;
+        this.fileUrl = fileUrl;
+        this.type = type;
+        this.course = course;
+        this.quizNumber = quizNumber;
     }
 
     // --- Getters & Setters ---
@@ -54,6 +69,9 @@ public class Activity {
 
     public ActivityType getType() { return type; }
     public void setType(ActivityType type) { this.type = type; }
+
+    public Integer getQuizNumber() { return quizNumber; }
+    public void setQuizNumber(Integer quizNumber) { this.quizNumber = quizNumber; }
 
     public Course getCourse() { return course; }
     public void setCourse(Course course) { this.course = course; }
