@@ -1,6 +1,8 @@
 package com.chemz.lms.service;
 
+import com.chemz.lms.dto.CourseDTO;
 import com.chemz.lms.dto.StudentDTO;
+import com.chemz.lms.dto.TeacherDTO;
 import com.chemz.lms.model.Course;
 import com.chemz.lms.model.Student;
 import com.chemz.lms.repository.StudentRepository;
@@ -15,6 +17,7 @@ public class StudentService {
 
     private final StudentRepository studentRepository;
 
+    // Constructor injection
     public StudentService(StudentRepository studentRepository) {
         this.studentRepository = studentRepository;
     }
@@ -40,7 +43,6 @@ public class StudentService {
             student.setFirstName(updatedStudent.getFirstName());
             student.setMiddleName(updatedStudent.getMiddleName());
             student.setLastName(updatedStudent.getLastName());
-            // add other student-specific fields here, e.g., age, gender
             return studentRepository.save(student);
         }).orElseThrow(() -> new RuntimeException("Student not found"));
     }
@@ -58,17 +60,6 @@ public class StudentService {
         return studentRepository.findByEmail(email);
     }
 
-    // Returns courses the student is enrolled in
-    public List<Course> getEnrolledCourses(Long studentId) {
-        return studentRepository.findById(studentId)
-                .map(student -> student.getEnrollments()
-                        .stream()
-                        .map(enrollment -> enrollment.getCourse())
-                        .toList())
-                .orElseThrow(() -> new RuntimeException("Student not found"));
-    }
-
-    // In StudentService
     public List<Long> getEnrolledCourseIds(Long studentId) {
         return studentRepository.findById(studentId)
                 .map(student -> student.getEnrollments()
@@ -78,19 +69,46 @@ public class StudentService {
                 .orElseThrow(() -> new RuntimeException("Student not found"));
     }
 
+    public List<Course> getEnrolledCourses(Long studentId) {
+        return studentRepository.findById(studentId)
+                .map(Student::getEnrolledCourses)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+    }
+
     public Optional<Student> getStudentByUser(String userIdentifier) {
-        // Try finding by username first
-        Optional<Student> student = studentRepository.findByUsername(userIdentifier);
-        if (student.isPresent()) {
-            return student;
-        }
-        // Fallback to email
-        return studentRepository.findByEmail(userIdentifier);
+        return studentRepository.findByUsername(userIdentifier)
+                .or(() -> studentRepository.findByEmail(userIdentifier));
     }
 
     public List<StudentDTO> getAllStudentDTOs() {
         return studentRepository.findAll().stream()
                 .map(s -> new StudentDTO(s.getId(), s.getFirstName(), s.getLastName()))
                 .collect(Collectors.toList());
+    }
+
+    // Convert enrolled courses to DTOs (used by controller)
+    public List<CourseDTO> getEnrolledCoursesDTO(Long studentId) {
+        return getEnrolledCourses(studentId)
+                .stream()
+                .map(course -> new CourseDTO(
+                        course.getId(),
+                        course.getCourseName(),
+                        course.getDescription(),
+                        course.getTeacher() != null
+                                ? new TeacherDTO(
+                                course.getTeacher().getId(),
+                                course.getTeacher().getFirstName(),
+                                course.getTeacher().getLastName())
+                                : null,
+                        course.getEnrollments()
+                                .stream()
+                                .map(e -> new StudentDTO(
+                                        e.getStudent().getId(),
+                                        e.getStudent().getFirstName(),
+                                        e.getStudent().getLastName()
+                                ))
+                                .toList()
+                ))
+                .toList();
     }
 }
