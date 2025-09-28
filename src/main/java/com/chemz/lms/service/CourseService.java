@@ -3,8 +3,10 @@ package com.chemz.lms.service;
 import com.chemz.lms.model.*;
 import com.chemz.lms.repository.CourseRepository;
 import com.chemz.lms.repository.EnrollmentRepository;
+import com.chemz.lms.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,10 +15,12 @@ public class CourseService {
 
     private final CourseRepository courseRepository;
     private final EnrollmentRepository enrollmentRepository;
+    private final StudentRepository studentRepository;
 
-    public CourseService(CourseRepository courseRepository, EnrollmentRepository enrollmentRepository) {
+    public CourseService(CourseRepository courseRepository, EnrollmentRepository enrollmentRepository, StudentRepository studentRepository) {
         this.courseRepository = courseRepository;
         this.enrollmentRepository = enrollmentRepository;
+        this.studentRepository = studentRepository;
     }
 
     // --- Create a course ---
@@ -85,5 +89,7 @@ public class CourseService {
     public Course saveCourse(Course course) {
         return courseRepository.save(course);
     }
-
+    public List<Student> getStudentsForCourse(Long courseId) {
+        return enrollmentRepository.findStudentsByCourseId(courseId);
+    }
 }

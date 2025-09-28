@@ -1,5 +1,8 @@
 package com.chemz.lms.controller;
 
+import com.chemz.lms.dto.CourseDTO;
+import com.chemz.lms.dto.StudentDTO;
+import com.chemz.lms.dto.TeacherDTO;
 import com.chemz.lms.model.Course;
 import com.chemz.lms.model.Teacher;
 import com.chemz.lms.service.CourseService;
@@ -46,9 +49,24 @@ public class TeacherController {
 
     // --- Teacher-specific actions ---
     @GetMapping("/{id}/courses")
-    public ResponseEntity<Set<Course>> getTeacherCourses(@PathVariable Long id) {
+    public ResponseEntity<List<CourseDTO>> getTeacherCourses(@PathVariable Long id) {
         return teacherService.getTeacherById(id)
-                .map(teacher -> ResponseEntity.ok(teacher.getCourses()))
+                .map(teacher -> teacher.getCourses().stream()
+                        .map(course -> new CourseDTO(
+                                course.getId(),
+                                course.getCourseName(),
+                                course.getDescription(),
+                                new TeacherDTO(
+                                        teacher.getId(),
+                                        teacher.getFirstName(),
+                                        teacher.getLastName()
+                                ),
+                                courseService.getStudentsForCourse(course.getId()).stream()
+                                        .map(s -> new StudentDTO(s.getId(), s.getFirstName(), s.getLastName()))
+                                        .toList()
+                        ))
+                        .toList())
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 }
