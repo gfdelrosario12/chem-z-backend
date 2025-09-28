@@ -6,6 +6,7 @@ import com.chemz.lms.repository.ActivityRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ActivityService {
@@ -16,14 +17,18 @@ public class ActivityService {
         this.activityRepository = activityRepository;
     }
 
-    public Activity createActivity(Activity activity) {
+    // Create activity and associate with a course
+    public Activity createActivity(Activity activity, Course course) {
+        activity.setCourse(course);
         return activityRepository.save(activity);
     }
 
+    // Get all activities for a given course ID
     public List<Activity> getActivitiesByCourse(Long courseId) {
         return activityRepository.findByCourseId(courseId);
     }
 
+    // Count all activities
     public long countActivities() {
         return activityRepository.count();
     }
