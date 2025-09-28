@@ -1,5 +1,6 @@
 package com.chemz.lms.service;
 
+import com.chemz.lms.dto.StudentDTO;
 import com.chemz.lms.model.Course;
 import com.chemz.lms.model.Student;
 import com.chemz.lms.repository.StudentRepository;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class StudentService {
@@ -64,5 +66,31 @@ public class StudentService {
                         .map(enrollment -> enrollment.getCourse())
                         .toList())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
+    }
+
+    // In StudentService
+    public List<Long> getEnrolledCourseIds(Long studentId) {
+        return studentRepository.findById(studentId)
+                .map(student -> student.getEnrollments()
+                        .stream()
+                        .map(enrollment -> enrollment.getCourse().getId())
+                        .toList())
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+    }
+
+    public Optional<Student> getStudentByUser(String userIdentifier) {
+        // Try finding by username first
+        Optional<Student> student = studentRepository.findByUsername(userIdentifier);
+        if (student.isPresent()) {
+            return student;
+        }
+        // Fallback to email
+        return studentRepository.findByEmail(userIdentifier);
+    }
+
+    public List<StudentDTO> getAllStudentDTOs() {
+        return studentRepository.findAll().stream()
+                .map(s -> new StudentDTO(s.getId(), s.getFirstName(), s.getLastName()))
+                .collect(Collectors.toList());
     }
 }

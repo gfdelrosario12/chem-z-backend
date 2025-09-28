@@ -1,5 +1,6 @@
 package com.chemz.lms.controller;
 
+import com.chemz.lms.dto.StudentDTO;
 import com.chemz.lms.model.Course;
 import com.chemz.lms.model.Student;
 import com.chemz.lms.service.StudentService;
@@ -16,6 +17,11 @@ public class StudentController {
 
     public StudentController(StudentService studentService) {
         this.studentService = studentService;
+    }
+
+    @GetMapping("/dto")
+    public List<StudentDTO> getAllStudentDTOs() {
+        return studentService.getAllStudentDTOs();
     }
 
     // --- Student CRUD ---
@@ -41,10 +47,8 @@ public class StudentController {
     }
 
     // --- Student-specific actions ---
-    @GetMapping("/{id}/courses")
-    public ResponseEntity<List<Course>> getStudentCourses(@PathVariable Long id) {
-        return studentService.getStudentById(id)
-                .map(student -> ResponseEntity.ok(student.getEnrolledCourses()))
-                .orElse(ResponseEntity.notFound().build());
+    @GetMapping("/{studentId}/course-ids")
+    public ResponseEntity<List<Long>> getEnrolledCourseIds(@PathVariable Long studentId) {
+        return ResponseEntity.ok(studentService.getEnrolledCourseIds(studentId));
     }
 }

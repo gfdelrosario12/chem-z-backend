@@ -56,4 +56,15 @@ public class TeacherService {
     public long countTeachers() {
         return teacherRepository.count();
     }
+
+    public Optional<Teacher> getTeacherByUser(String userIdentifier) {
+        // Try finding by username first
+        Optional<Teacher> teacher = teacherRepository.findByUsername(userIdentifier);
+        if (teacher.isPresent()) {
+            return teacher;
+        }
+        // Fallback to email
+        return teacherRepository.findByEmail(userIdentifier);
+    }
+
 }

@@ -81,4 +81,9 @@ public class CourseService {
     public long countCourses() {
         return courseRepository.count();
     }
+
+    public Course saveCourse(Course course) {
+        return courseRepository.save(course);
+    }
+
 }
