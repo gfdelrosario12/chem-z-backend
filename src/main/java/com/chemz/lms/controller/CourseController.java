@@ -1,11 +1,13 @@
 package com.chemz.lms.controller;
 
 import com.chemz.lms.dto.*;
+import com.chemz.lms.dto.CourseDTO;
 import com.chemz.lms.mapper.CourseMapper;
 import com.chemz.lms.model.*;
 import com.chemz.lms.service.CourseService;
 import com.chemz.lms.service.StudentService;
 import com.chemz.lms.service.TeacherService;
+import com.chemz.lms.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,13 +20,16 @@ public class CourseController {
     private final CourseService courseService;
     private final StudentService studentService;
     private final TeacherService teacherService;
+    private final UserService userService;
 
     public CourseController(CourseService courseService,
                             StudentService studentService,
-                            TeacherService teacherService) {
+                            TeacherService teacherService,
+                            UserService userService) { // <-- inject here
         this.courseService = courseService;
         this.studentService = studentService;
         this.teacherService = teacherService;
+        this.userService = userService;
     }
 
     // --- Create a new course with a teacher ---
@@ -130,5 +135,43 @@ public class CourseController {
     public ResponseEntity<Void> deleteCourse(@PathVariable Long id) {
         courseService.deleteCourse(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/with-users")
+    public ResponseEntity<CourseDTO> updateCourseWithUserIds(
+            @PathVariable Long id,
+            @RequestBody CourseUpdateDTO dto
+    ) {
+        Course course = courseService.getCourseById(id)
+                .orElseThrow(() -> new RuntimeException("Course not found: " + id));
+
+        course.setCourseName(dto.getCourseName());
+        course.setDescription(dto.getDescription());
+
+        // Teacher
+        if (dto.getTeacherId() != null) {
+            var user = userService.getUserById(dto.getTeacherId())
+                    .orElseThrow(() -> new RuntimeException("User not found: " + dto.getTeacherId()));
+            Teacher teacher = teacherService.getTeacherByUser(String.valueOf(user))
+                    .orElseThrow(() -> new RuntimeException("Teacher not found for user: " + user.getId()));
+            course.setTeacher(teacher);
+        }
+
+        // Students
+        course.getEnrollments().clear();
+        if (dto.getStudentIds() != null) {
+            for (Long userId : dto.getStudentIds()) {
+                var user = userService.getUserById(userId)
+                        .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+                Student student = studentService.getStudentByUser(String.valueOf(user))
+                        .orElseThrow(() -> new RuntimeException("Student not found for user: " + user.getId()));
+
+                Enrollment enrollment = new Enrollment(student, course);
+                course.getEnrollments().add(enrollment);
+            }
+        }
+
+        Course updated = courseService.saveCourse(course);
+        return ResponseEntity.ok(CourseMapper.toDTO(updated));
     }
 }
