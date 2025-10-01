@@ -1,4 +1,4 @@
-package com.chemz.lms.mapper;
+package com.chemz.lms.dto;
 
 import com.chemz.lms.dto.*;
 import com.chemz.lms.model.Course;
