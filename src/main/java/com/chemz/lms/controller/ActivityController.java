@@ -12,6 +12,7 @@
 
     import java.util.List;
     import java.util.Map;
+    import java.util.Optional;
 
     @RestController
     @RequestMapping("/api/activities")
@@ -49,11 +50,46 @@
             return ResponseEntity.ok(dto);
         }
 
-        // Presigned URL generation
-        @PostMapping("presigned-url")
-        public Map<String, String> createPresignedUrl(@RequestBody FileRequest req) {
-            String url = s3Service.generatePresignedUrl(req.getFileName(), req.getContentType());
-            return Map.of("url", url, "fileName", req.getFileName());
+        @PostMapping("presigned-url/document")
+        public Map<String, String> createDocumentPresignedUrl(@RequestBody FileRequest req) {
+            String folderName = S3Service.FOLDER_DOCUMENTS;
+
+            String url = s3Service.generatePresignedUrl(
+                    folderName,
+                    req.getFileName(),
+                    req.getContentType()
+            );
+
+            String finalS3Key = folderName + "/" + req.getFileName();
+
+            return Map.of(
+                    "url", url,
+                    "fileName", req.getFileName(),
+                    "s3Key", finalS3Key // Client stores this key in the Activity model
+            );
+        }
+
+        /**
+         * Endpoint for uploading proof/screenshot files.
+         * Uses the hardcoded "proofs" S3 folder.
+         */
+        @PostMapping("presigned-url/proof")
+        public Map<String, String> createProofPresignedUrl(@RequestBody FileRequest req) {
+            String folderName = S3Service.FOLDER_PROOFS;
+
+            String url = s3Service.generatePresignedUrl(
+                    folderName,
+                    req.getFileName(),
+                    req.getContentType()
+            );
+
+            String finalS3Key = folderName + "/" + req.getFileName();
+
+            return Map.of(
+                    "url", url,
+                    "fileName", req.getFileName(),
+                    "s3Key", finalS3Key // Client stores this key in the Activity model
+            );
         }
 
         // PUT update an existing activity
@@ -69,7 +105,19 @@
         // DELETE an activity by id
         @DeleteMapping("/{id}")
         public ResponseEntity<Void> deleteActivity(@PathVariable Long id) {
+
+            // NO NEED to fetch the Activity here.
+            // NO NEED to manually call S3Service.deleteFile().
+
+            // DELEGATE: The ActivityService now handles the entire deletion process:
+            // 1. Fetching the Activity by ID (for its fileUrl).
+            // 2. Extracting the S3 Key from the fileUrl.
+            // 3. Calling S3Service.deleteFile(key).
+            // 4. Deleting the Activity record from the database.
+
             activityService.deleteActivity(id);
+
+            // This is all the controller needs to do for a DELETE operation.
             return ResponseEntity.noContent().build();
         }
     }
