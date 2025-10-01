@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -75,6 +76,9 @@ public class ActivityService {
         return mapToDTO(saved);
     }
 
+    public Optional<Activity> getActivityEntityById(Long id) {
+        return activityRepository.findById(id);
+    }
 
     @Transactional
     public void deleteActivity(Long id) {
