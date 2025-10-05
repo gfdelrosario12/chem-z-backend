@@ -1,7 +1,10 @@
 package com.chemz.lms.model;
 
-import com.chemz.lms.types.ActivityType;
+import com.chemz.lms.model.ActivityType;
 import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "activities")
@@ -11,48 +14,45 @@ public class Activity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String title;  // short title of activity
-
-    @Column(columnDefinition = "TEXT")
+    private String title;
     private String description;
 
-    @Column(nullable = true)
-    private String fileUrl;  // URL or path to uploaded file
-
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ActivityType type; // QUIZ or ACTIVITY
+    private ActivityType type; // QUIZ or LAB
 
-    @Column(nullable = true)
-    private Integer quizNumber; // optional, only for QUIZ activities
+    private Integer activityNumber; // shared for Quiz/Lab
 
-    // Many Activities -> One Course
-    @ManyToOne
-    @JoinColumn(name = "course_id", nullable = false)
+    private String fileUrl;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id")
     private Course course;
+
+    @OneToMany(mappedBy = "activity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<StudentActivity> studentActivities = new HashSet<>();
 
     public Activity() {}
 
-    // Constructor without quizNumber (optional)
     public Activity(String title, String description, String fileUrl, ActivityType type, Course course) {
         this.title = title;
         this.description = description;
         this.fileUrl = fileUrl;
         this.type = type;
         this.course = course;
-        this.quizNumber = null;
+        this.activityNumber = null;
     }
 
-    // Constructor with quizNumber
-    public Activity(String title, String description, String fileUrl, ActivityType type, Course course, Integer quizNumber) {
+    public Activity(String title, String description, String fileUrl, ActivityType type, Course course, Integer activityNumber) {
         this.title = title;
         this.description = description;
         this.fileUrl = fileUrl;
         this.type = type;
         this.course = course;
-        this.quizNumber = quizNumber;
+        this.activityNumber = activityNumber;
     }
+
+    public Set<StudentActivity> getStudentActivities() { return studentActivities; }
+    public void setStudentActivities(Set<StudentActivity> studentActivities) { this.studentActivities = studentActivities; }
 
     // --- Getters & Setters ---
     public Long getId() { return id; }
@@ -70,8 +70,8 @@ public class Activity {
     public ActivityType getType() { return type; }
     public void setType(ActivityType type) { this.type = type; }
 
-    public Integer getQuizNumber() { return quizNumber; }
-    public void setQuizNumber(Integer quizNumber) { this.quizNumber = quizNumber; }
+    public Integer getActivityNumber() { return activityNumber; }
+    public void setActivityNumber(Integer activityNumber) { this.activityNumber = activityNumber; }
 
     public Course getCourse() { return course; }
     public void setCourse(Course course) { this.course = course; }

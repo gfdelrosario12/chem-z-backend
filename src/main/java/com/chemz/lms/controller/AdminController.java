@@ -41,7 +41,7 @@ public class AdminController {
         stats.put("admins", userService.countAdmins());
         stats.put("students", userService.countStudents());
         stats.put("courses", courseService.countCourses());
-        stats.put("activities", activityService.countActivities());
+        stats.put("activities", activityService.countAllActivities()); // <- fixed
 
         return ResponseEntity.ok(stats);
     }

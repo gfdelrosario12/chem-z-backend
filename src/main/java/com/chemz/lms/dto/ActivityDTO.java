@@ -1,6 +1,6 @@
 package com.chemz.lms.dto;
 
-import com.chemz.lms.types.ActivityType;
+import com.chemz.lms.model.ActivityType;
 
 public class ActivityDTO {
     private Long id;
@@ -8,16 +8,8 @@ public class ActivityDTO {
     private String description;
     private String fileUrl;
     private ActivityType type;
-    private Integer quizNumber;
-
-    public ActivityDTO(Long id, String title, String description, String fileUrl, ActivityType type, Integer quizNumber) {
-        this.id = id;
-        this.title = title;
-        this.description = description;
-        this.fileUrl = fileUrl;
-        this.type = type;
-        this.quizNumber = quizNumber;
-    }
+    private Integer activityNumber;
+    private Integer score;
 
     // --- Getters ---
     public Long getId() { return id; }
@@ -25,5 +17,16 @@ public class ActivityDTO {
     public String getDescription() { return description; }
     public String getFileUrl() { return fileUrl; }
     public ActivityType getType() { return type; }
-    public Integer getQuizNumber() { return quizNumber; }
+    public Integer getActivityNumber() { return activityNumber; } // ✅ FIXED
+    public Integer getScore() { return score; }
+
+    // --- Setters ---
+    public void setId(Long id) { this.id = id; }
+    public void setTitle(String title) { this.title = title; }
+    public void setDescription(String description) { this.description = description; }
+    public void setFileUrl(String fileUrl) { this.fileUrl = fileUrl; }
+    public void setType(ActivityType type) { this.type = type; }
+    public void setActivityNumber(Integer activityNumber) { this.activityNumber = activityNumber; }
+    public void setScore(Integer score) { this.score = score; }
 }
+

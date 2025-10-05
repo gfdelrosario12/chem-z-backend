@@ -2,5 +2,5 @@ package com.chemz.lms.types;
 
 public enum ActivityType {
     ACTIVITY,
-    QUIZ
+    ASSIGNMENT, PROJECT, QUIZ
 }
