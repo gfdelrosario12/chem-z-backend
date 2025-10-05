@@ -4,13 +4,10 @@ import com.chemz.lms.dto.ActivityDTO;
 import com.chemz.lms.dto.FileRequest;
 import com.chemz.lms.dto.StudentActivityDTO;
 import com.chemz.lms.model.Activity;
-import com.chemz.lms.model.StudentActivity;
-import com.chemz.lms.model.User;
 import com.chemz.lms.service.ActivityService;
 import com.chemz.lms.service.CourseService;
 import com.chemz.lms.service.S3Service;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

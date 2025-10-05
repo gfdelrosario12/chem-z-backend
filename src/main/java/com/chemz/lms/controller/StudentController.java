@@ -2,7 +2,6 @@ package com.chemz.lms.controller;
 
 import com.chemz.lms.dto.CourseDTO;
 import com.chemz.lms.dto.StudentDTO;
-import com.chemz.lms.model.Course;
 import com.chemz.lms.model.Student;
 import com.chemz.lms.service.StudentService;
 import org.springframework.http.ResponseEntity;
