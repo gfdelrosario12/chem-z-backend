@@ -2,7 +2,7 @@ package com.chemz.lms.controller;
 
 import com.chemz.lms.dto.*;
 import com.chemz.lms.dto.CourseDTO;
-import com.chemz.lms.mapper.CourseMapper;
+import com.chemz.lms.dto.CourseMapper;
 import com.chemz.lms.model.*;
 import com.chemz.lms.service.CourseService;
 import com.chemz.lms.service.StudentService;

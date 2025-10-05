@@ -14,6 +14,9 @@ import java.util.Set;
 public class Student extends User {
     private String gradeLevel;
 
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<StudentActivity> activities = new HashSet<>();
+
     public Student() {}
 
     public Student(String username, String password, String email, String gradeLevel) {
@@ -30,6 +33,9 @@ public class Student extends User {
     // --- Getters & helper methods ---
     public Set<Enrollment> getEnrollments() { return enrollments; }
     public void setEnrollments(Set<Enrollment> enrollments) { this.enrollments = enrollments; }
+
+    public Set<StudentActivity> getActivities() { return activities; }
+    public void setActivities(Set<StudentActivity> activities) { this.activities = activities; }
 
     /**
      * Convenience method to get all courses this student is enrolled in

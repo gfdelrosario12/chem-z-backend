@@ -9,5 +9,5 @@ import java.util.List;
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
     List<Activity> findByCourseId(Long courseId);
     List<Activity> findByCourse(Course course);
-
+    long countByCourseId(Long courseId);
 }
