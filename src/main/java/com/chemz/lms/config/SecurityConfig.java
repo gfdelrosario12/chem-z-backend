@@ -35,7 +35,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
-                "https://chem-z.duckdns.org",
+                "https://chemz.duckdns.org",
                 "http://localhost:3000"
         ));
 
