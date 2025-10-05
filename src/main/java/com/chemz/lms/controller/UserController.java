@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -33,8 +34,21 @@ public class UserController {
 
     // ✅ Register
     @PostMapping("/register")
-    public ResponseEntity<UserDto> register(@RequestBody User user) {
-        return ResponseEntity.ok(userService.createUser(user));
+    public ResponseEntity<?> register(@RequestBody User user) {
+        try {
+            UserDto createdUser = userService.createUser(user);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Account created successfully!",
+                    "username", createdUser.getUsername(),
+                    "user", createdUser
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(Map.of("error", "Registration failed."));
+        }
     }
 
     // ✅ Login
@@ -90,8 +104,11 @@ public class UserController {
     // ✅ Update user
     @PutMapping("/{id}")
     public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
-        return ResponseEntity.ok(userService.updateUser(id, updatedUser));
+        UserDto result = userService.updateUser(id, updatedUser);
+        System.out.println("✅ Updated user info: " + result);
+        return ResponseEntity.ok(result);
     }
+
 
     // ✅ Delete user
     @DeleteMapping("/{id}")
@@ -99,4 +116,22 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.ok("User deleted successfully 🗑️");
     }
+
+    @PutMapping("/{id}/change-password")
+    public ResponseEntity<?> changePassword(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> requestBody
+    ) {
+        try {
+            String oldPassword = requestBody.get("oldPassword");
+            String newPassword = requestBody.get("newPassword");
+            userService.changePassword(id, oldPassword, newPassword);
+            return ResponseEntity.ok(Map.of("message", "Password changed successfully ✅"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to change password ❌"));
+        }
+    }
+
 }

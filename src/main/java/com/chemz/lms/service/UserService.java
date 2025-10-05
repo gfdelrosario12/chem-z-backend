@@ -38,7 +38,11 @@ public class UserService {
         user.setUsername(generatedUsername);
 
         User saved = userRepository.save(user);
-        return convertToDTO(saved);
+
+        UserDto dto = convertToDTO(saved);
+        dto.setUsername(generatedUsername); // ensure it's present
+
+        return dto;
     }
 
     // --- HELPER ---
@@ -91,6 +95,10 @@ public class UserService {
         return userRepository.findById(id)
                 .map(existingUser -> {
                     existingUser.setEmail(updatedUser.getEmail());
+                    existingUser.setFirstName(updatedUser.getFirstName());
+                    existingUser.setMiddleName(updatedUser.getMiddleName());
+                    existingUser.setLastName(updatedUser.getLastName());
+
                     if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
                         existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
                     }
@@ -103,7 +111,8 @@ public class UserService {
                         student.setGradeLevel(updatedStudent.getGradeLevel());
                     }
 
-                    return convertToDTO(userRepository.save(existingUser));
+                    User saved = userRepository.save(existingUser);
+                    return convertToDTO(saved);
                 })
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
@@ -129,4 +138,17 @@ public class UserService {
     public long countUsers() { return userRepository.count(); }
     public long countAdmins() { return userRepository.countByRole("ADMIN"); }
     public long countStudents() { return userRepository.countByRole("STUDENT"); }
+
+    // --- CHANGE PASSWORD ---
+    public void changePassword(Long id, String oldPassword, String newPassword) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new IllegalArgumentException("Old password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
 }
