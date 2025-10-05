@@ -70,4 +70,23 @@ public class EnrollmentController {
 
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/teacher/{teacherId}/grades")
+    public ResponseEntity<List<Map<String, Object>>> getTeacherStudentsGrades(@PathVariable Long teacherId) {
+
+        // Find all enrollments where the course's teacher matches
+        List<Enrollment> enrollments = enrollmentRepository.findByCourseTeacherId(teacherId);
+
+        List<Map<String, Object>> result = enrollments.stream().map(enrollment -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("studentId", enrollment.getStudent().getId());
+            map.put("studentName", enrollment.getStudent().getFirstName() + " " + enrollment.getStudent().getLastName());
+            map.put("courseId", enrollment.getCourse().getId());
+            map.put("courseName", enrollment.getCourse().getCourseName());
+            map.put("grade", enrollment.getGrade());
+            return map;
+        }).toList();
+
+        return ResponseEntity.ok(result);
+    }
 }
