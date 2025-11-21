@@ -56,7 +56,7 @@ public abstract class User {
         this.role = role;
         this.firstName = firstName;
         this.middleName = middleName;
-        this.lastName = lastName;
+        this.lastName = lastName;   
     }
 
     public User(String username, String password, String email, String student) {
