@@ -1,5 +1,6 @@
 package com.chemz.lms.service;
 
+import com.chemz.lms.model.ActivityType;
 import com.chemz.lms.dto.ActivityDTO;
 import com.chemz.lms.dto.StudentActivityDTO;
 import com.chemz.lms.model.Activity;
@@ -43,17 +44,31 @@ public class ActivityService {
         this.s3Service = s3Service;
     }
 
+    // --- New method ---
+    public boolean existsByCourseAndTypeAndActivityNumber(Long courseId, ActivityType type, Integer activityNumber) {
+        if (activityNumber == null || type == null) return false;
+        return activityRepository.existsByCourseIdAndTypeAndActivityNumber(courseId, type, activityNumber);
+    }
+
     // Create activity and assign to all students in the course
     @Transactional
     public ActivityDTO createActivity(Long courseId, Activity activityRequest) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
 
-        activityRequest.setCourse(course);
+        // Check for duplicate activity number
+        if (activityRequest.getActivityNumber() != null && existsByCourseAndTypeAndActivityNumber(
+                courseId, activityRequest.getType(), activityRequest.getActivityNumber())) {
+            throw new IllegalArgumentException(
+                    "Activity number " + activityRequest.getActivityNumber()
+                            + " already exists for type " + activityRequest.getType() + " in this course."
+            );
+        }
 
+        activityRequest.setCourse(course);
         Activity saved = activityRepository.save(activityRequest);
 
-        // Automatically create StudentActivity for all enrolled students
+        // Assign to all students
         course.getEnrollments().forEach(enrollment -> {
             StudentActivity sa = new StudentActivity();
             sa.setActivity(saved);

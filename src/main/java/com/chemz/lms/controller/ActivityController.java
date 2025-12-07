@@ -4,9 +4,11 @@ import com.chemz.lms.dto.ActivityDTO;
 import com.chemz.lms.dto.FileRequest;
 import com.chemz.lms.dto.StudentActivityDTO;
 import com.chemz.lms.model.Activity;
+import com.chemz.lms.model.ActivityType;
 import com.chemz.lms.service.ActivityService;
 import com.chemz.lms.service.CourseService;
 import com.chemz.lms.service.S3Service;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +18,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/activities")
 public class ActivityController {
-
     private final ActivityService activityService;
     private final CourseService courseService;
     private final S3Service s3Service;
@@ -29,7 +30,7 @@ public class ActivityController {
         this.s3Service = s3Service;
     }
 
-    // GET all activities for a specific course (DTO)
+    // GET all activities for a specific course
     @GetMapping("/course/{courseId}")
     public ResponseEntity<List<ActivityDTO>> getActivitiesByCourse(@PathVariable Long courseId) {
         courseService.getCourseById(courseId)
@@ -41,9 +42,20 @@ public class ActivityController {
 
     // POST create a new activity for a specific course
     @PostMapping("/course/{courseId}")
-    public ResponseEntity<ActivityDTO> createActivity(
+    public ResponseEntity<?> createActivity(
             @PathVariable Long courseId,
             @RequestBody Activity activityRequest) {
+
+        // Check if activityNumber is already used for this type in this course
+        Integer activityNumber = activityRequest.getActivityNumber();
+        ActivityType type = activityRequest.getType();
+
+        if (activityNumber != null && activityService.existsByCourseAndTypeAndActivityNumber(courseId, type, activityNumber)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(
+                            "error", "Activity number " + activityNumber + " already exists for type " + type + " in this course."
+                    ));
+        }
 
         ActivityDTO dto = activityService.createActivity(courseId, activityRequest);
         return ResponseEntity.ok(dto);
@@ -105,7 +117,7 @@ public class ActivityController {
         return ResponseEntity.noContent().build();
     }
 
-    // --- StudentActivity endpoints ---
+// --- StudentActivity endpoints ---
 
     @GetMapping("/{activityId}/retries/{studentId}")
     public ResponseEntity<Integer> getRetries(

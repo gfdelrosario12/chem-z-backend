@@ -1,13 +1,17 @@
 package com.chemz.lms.model;
 
-import com.chemz.lms.model.ActivityType;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "activities")
+@Table(
+        name = "activities",
+        uniqueConstraints = @UniqueConstraint(
+                columnNames = {"course_id", "type", "activity_number"}
+        )
+)
 public class Activity {
 
     @Id
