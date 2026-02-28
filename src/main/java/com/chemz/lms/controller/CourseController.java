@@ -1,8 +1,6 @@
 package com.chemz.lms.controller;
 
 import com.chemz.lms.dto.*;
-import com.chemz.lms.dto.CourseDTO;
-import com.chemz.lms.dto.CourseMapper;
 import com.chemz.lms.model.*;
 import com.chemz.lms.service.CourseService;
 import com.chemz.lms.service.StudentService;
@@ -25,7 +23,7 @@ public class CourseController {
     public CourseController(CourseService courseService,
                             StudentService studentService,
                             TeacherService teacherService,
-                            UserService userService) { // <-- inject here
+                            UserService userService) {
         this.courseService = courseService;
         this.studentService = studentService;
         this.teacherService = teacherService;
@@ -98,35 +96,24 @@ public class CourseController {
         );
     }
 
-    // --- Update a course (name, desc, teacher, students) ---
+    // --- Update a course (name, description, teacher, students) ---
     @PutMapping("/{id}")
     public ResponseEntity<CourseDTO> updateCourse(
             @PathVariable Long id,
             @RequestBody CourseUpdateDTO dto) {
 
-        Course course = courseService.getCourseById(id)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
-
         Teacher teacher = teacherService.getTeacherById(dto.getTeacherId())
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
 
-        // Update core fields
-        course.setCourseName(dto.getCourseName());
-        course.setDescription(dto.getDescription());
-        course.setTeacher(teacher);
+        // Use transactional service method to safely update course and enrollments
+        Course updated = courseService.updateCourseWithStudents(
+                id,
+                dto.getCourseName(),
+                dto.getDescription(),
+                teacher,
+                dto.getStudentIds()
+        );
 
-        // Update enrollments
-        if (dto.getStudentIds() != null) {
-            course.getEnrollments().clear();
-            for (Long studentId : dto.getStudentIds()) {
-                Student student = studentService.getStudentById(studentId)
-                        .orElseThrow(() -> new RuntimeException("Student not found: " + studentId));
-                Enrollment enrollment = new Enrollment(student, course);
-                course.getEnrollments().add(enrollment);
-            }
-        }
-
-        Course updated = courseService.createCourse(course);
         return ResponseEntity.ok(CourseMapper.toDTO(updated));
     }
 
@@ -137,6 +124,7 @@ public class CourseController {
         return ResponseEntity.noContent().build();
     }
 
+    // --- Update course using user IDs (optional, keep if needed) ---
     @PutMapping("/{id}/with-users")
     public ResponseEntity<CourseDTO> updateCourseWithUserIds(
             @PathVariable Long id,
@@ -158,20 +146,10 @@ public class CourseController {
         }
 
         // Students
-        course.getEnrollments().clear();
-        if (dto.getStudentIds() != null) {
-            for (Long userId : dto.getStudentIds()) {
-                var user = userService.getUserById(userId)
-                        .orElseThrow(() -> new RuntimeException("User not found: " + userId));
-                Student student = studentService.getStudentByUser(String.valueOf(user))
-                        .orElseThrow(() -> new RuntimeException("Student not found for user: " + user.getId()));
-
-                Enrollment enrollment = new Enrollment(student, course);
-                course.getEnrollments().add(enrollment);
-            }
-        }
+        courseService.updateEnrollmentsFromUserIds(course, dto.getStudentIds(), studentService);
 
         Course updated = courseService.saveCourse(course);
         return ResponseEntity.ok(CourseMapper.toDTO(updated));
     }
+
 }

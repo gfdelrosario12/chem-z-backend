@@ -7,6 +7,7 @@ import com.chemz.lms.model.Course;
 import com.chemz.lms.model.Student;
 import com.chemz.lms.repository.StudentRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,12 +18,12 @@ public class StudentService {
 
     private final StudentRepository studentRepository;
 
-    // Constructor injection
     public StudentService(StudentRepository studentRepository) {
         this.studentRepository = studentRepository;
     }
 
     // --- CRUD operations ---
+
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
     }
@@ -52,27 +53,13 @@ public class StudentService {
     }
 
     // --- Student-specific actions ---
+
     public Optional<Student> getStudentByUsername(String username) {
         return studentRepository.findByUsername(username);
     }
 
     public Optional<Student> getStudentByEmail(String email) {
         return studentRepository.findByEmail(email);
-    }
-
-    public List<Long> getEnrolledCourseIds(Long studentId) {
-        return studentRepository.findById(studentId)
-                .map(student -> student.getEnrollments()
-                        .stream()
-                        .map(enrollment -> enrollment.getCourse().getId())
-                        .toList())
-                .orElseThrow(() -> new RuntimeException("Student not found"));
-    }
-
-    public List<Course> getEnrolledCourses(Long studentId) {
-        return studentRepository.findById(studentId)
-                .map(Student::getEnrolledCourses)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
     }
 
     public Optional<Student> getStudentByUser(String userIdentifier) {
@@ -82,33 +69,65 @@ public class StudentService {
 
     public List<StudentDTO> getAllStudentDTOs() {
         return studentRepository.findAll().stream()
-                .map(s -> new StudentDTO(s.getId(), s.getFirstName(), s.getLastName()))
+                .map(s -> new StudentDTO(
+                        s.getId(),
+                        s.getFirstName(),
+                        s.getLastName()
+                ))
                 .collect(Collectors.toList());
     }
 
-    // Convert enrolled courses to DTOs (used by controller)
-    public List<CourseDTO> getEnrolledCoursesDTO(Long studentId) {
-        return getEnrolledCourses(studentId)
+    // =========================================================
+    // FIXED METHODS (Transactional to prevent LazyInitialization)
+    // =========================================================
+
+    @Transactional
+    public List<Long> getEnrolledCourseIds(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        return student.getEnrollments()
                 .stream()
-                .map(course -> new CourseDTO(
-                        course.getId(),
-                        course.getCourseName(),
-                        course.getDescription(),
-                        course.getTeacher() != null
-                                ? new TeacherDTO(
-                                course.getTeacher().getId(),
-                                course.getTeacher().getFirstName(),
-                                course.getTeacher().getLastName())
-                                : null,
-                        course.getEnrollments()
-                                .stream()
-                                .map(e -> new StudentDTO(
-                                        e.getStudent().getId(),
-                                        e.getStudent().getFirstName(),
-                                        e.getStudent().getLastName()
-                                ))
-                                .toList()
-                ))
+                .map(enrollment -> enrollment.getCourse().getId())
+                .toList();
+    }
+
+    @Transactional
+    public List<Course> getEnrolledCourses(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        return student.getEnrollments()
+                .stream()
+                .map(enrollment -> enrollment.getCourse())
+                .toList();
+    }
+
+    @Transactional
+    public List<CourseDTO> getEnrolledCoursesDTO(Long studentId) {
+
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        return student.getEnrollments()
+                .stream()
+                .map(enrollment -> {
+                    Course course = enrollment.getCourse();
+
+                    return new CourseDTO(
+                            course.getId(),
+                            course.getCourseName(),
+                            course.getDescription(),
+                            course.getTeacher() != null
+                                    ? new TeacherDTO(
+                                    course.getTeacher().getId(),
+                                    course.getTeacher().getFirstName(),
+                                    course.getTeacher().getLastName()
+                            )
+                                    : null,
+                            null
+                    );
+                })
                 .toList();
     }
 }

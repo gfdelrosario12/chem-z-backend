@@ -78,11 +78,29 @@ public class StudentActivityService {
     }
 
     public double getAverageScore(Long studentId, Long courseId) {
-        List<Integer> scores = studentActivityRepository.findScoresByStudentAndCourse(studentId, courseId);
 
-        if (scores.isEmpty()) return 0.0;
+        List<Integer> scores = studentActivityRepository
+                .findScoresByStudentAndCourse(studentId, courseId);
 
-        double sum = scores.stream().mapToDouble(Integer::doubleValue).sum();
-        return sum / scores.size();
+        // Safety net 1: null check
+        if (scores == null || scores.isEmpty()) {
+            return 0.0;
+        }
+
+        // Safety net 2: remove nulls (if any)
+        List<Integer> validScores = scores.stream()
+                .filter(score -> score != null)
+                .toList();
+
+        if (validScores.isEmpty()) {
+            return 0.0;
+        }
+
+        // Normal average formula
+        double sum = validScores.stream()
+                .mapToDouble(Integer::doubleValue)
+                .sum();
+
+        return sum / validScores.size();
     }
 }
